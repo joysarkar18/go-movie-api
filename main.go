@@ -169,12 +169,50 @@ func handelGetMovie(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func deleteMovie(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	vars := mux.Vars(r)
+	for index, ele := range movies {
+		if vars["id"] == ele.Id {
+			movies = append(movies[:index], movies[index+1:]...)
+			json.NewEncoder(w).Encode(ele)
+			return
+		}
+	}
+}
+
+func createMovie(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	var m Movie
+	_ = json.NewDecoder(r.Body).Decode(&m)
+	movies = append(movies, m)
+	json.NewEncoder(w).Encode(m)
+}
+
+func updateMovie(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	var m Movie
+	_ = json.NewDecoder(r.Body).Decode(&m)
+	vars := mux.Vars(r)
+	for index, ele := range movies {
+		if vars["id"] == ele.Id {
+			movies = append(movies[:index], movies[index+1:]...)
+			movies = append(movies, m)
+			json.NewEncoder(w).Encode(m)
+			return
+		}
+	}
+}
+
 func main() {
 
 	r := mux.NewRouter()
 
 	r.HandleFunc("/movies", handleGetAllMovies).Methods("GET")
 	r.HandleFunc("/movie/{id}", handelGetMovie).Methods("GET")
+	r.HandleFunc("/movie/{id}", deleteMovie).Methods("DELETE")
+	r.HandleFunc("/movie", createMovie).Methods("POST")
+	r.HandleFunc("/movie/update/{id}", updateMovie).Methods("POST")
 
 	http.ListenAndServe(":8080", r)
 
